@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
 using SharpAL.OpenAL;
@@ -34,8 +35,10 @@ namespace SharpAL {
                 var newStates = new Dictionary<AudioSource, ALSourceState>();
 
                 while (_shouldContinue) {
-                    if (sources.Count > 0) {
-                        foreach (var source in sources) {
+                    var sourcesClone = sources.ToArray();
+
+                    if (sourcesClone.Length > 0) {
+                        foreach (var source in sourcesClone) {
                             var newState = source.State;
 
                             if (states.ContainsKey(source) && newState == ALSourceState.Stopped && newState != states[source]) {
