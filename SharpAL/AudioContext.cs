@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using SharpAL.OpenAL;
 
 namespace SharpAL {
-    public sealed class AudioContext : AudioObject {
+    public sealed partial class AudioContext : AudioObject {
 
         public AudioContext([NotNull] AudioDevice device, [CanBeNull] int[] attribList) {
             _context = Alc.CreateContext(device.NativeDevice, attribList);
             Device = device;
+            _watchThread = new WatchThread(this);
+            _watchThread.Start();
         }
 
         public AudioContext([NotNull] AudioDevice device, [CanBeNull] AlcContextAttributes[] attribList) {
@@ -31,7 +34,17 @@ namespace SharpAL {
 
         internal IntPtr NativeContext => _context;
 
+        internal void ManageSource([NotNull] AudioSource audioSource) {
+            _createdSources.Add(audioSource);
+        }
+
+        internal void UnmanageSource([NotNull] AudioSource audioSource) {
+            _createdSources.Remove(audioSource);
+        }
+
         protected override void Dispose(bool disposing) {
+            _watchThread.Terminate();
+
             if (_context != IntPtr.Zero) {
                 var currentContext = Alc.GetCurrentContext();
                 if (currentContext == _context) {
@@ -44,7 +57,10 @@ namespace SharpAL {
             _context = IntPtr.Zero;
         }
 
+        private readonly HashSet<AudioSource> _createdSources = new HashSet<AudioSource>();
+
         private IntPtr _context;
+        private readonly WatchThread _watchThread;
 
     }
 }

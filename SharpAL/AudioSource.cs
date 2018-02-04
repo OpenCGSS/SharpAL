@@ -9,9 +9,13 @@ namespace SharpAL {
             Context = context;
             Alc.MakeContextCurrent(context.NativeContext);
             _source = AL.GenSource();
+
+            context.ManageSource(this);
         }
 
         public AudioContext Context { get; }
+
+        public event EventHandler<EventArgs> PlaybackStopped;
 
         public bool IsLooped {
             get {
@@ -184,7 +188,13 @@ namespace SharpAL {
 
         internal int NativeSource => _source;
 
+        internal void RaisePlaybackStopped(object sender, EventArgs e) {
+            PlaybackStopped?.Invoke(sender, e);
+        }
+
         protected override void Dispose(bool disposing) {
+            Context.UnmanageSource(this);
+
             AL.DeleteSource(_source);
             _source = 0;
         }
