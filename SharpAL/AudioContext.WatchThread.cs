@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
@@ -39,6 +40,12 @@ namespace SharpAL {
 
                     if (sourcesClone.Length > 0) {
                         foreach (var source in sourcesClone) {
+                            if (source == null) {
+                                Debug.Print("An AudioSource in the clone is null. Skipping this AudioSource but a memory leak is probably happening.");
+
+                                continue;
+                            }
+
                             var newState = source.State;
 
                             if (states.ContainsKey(source) && newState == ALSourceState.Stopped && newState != states[source]) {
